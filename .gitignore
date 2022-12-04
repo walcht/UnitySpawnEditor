@@ -1,3 +1,5 @@
 *
 !*.cs
 !.gitignore
+!README
+!TODO
