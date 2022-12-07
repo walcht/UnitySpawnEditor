@@ -2,23 +2,25 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 
+/// <summary>
+///     Custom Inspector for SpawnDatabase Scriptable Object.
+///     This custom editor helps you manage spawn positions; adding new spawns, moving existing spawns, etc...
+/// </summary>
 [CustomEditor(typeof(SpawnDatabase))]
 public class SpawnCustomInspector : Editor
 {
     SerializedProperty spawnPositions;
     SpawnDatabase editorTargetInstance;
 
-    List<Vector3> sceneSpawnPositions;                                          // list for storing spawn position in the scene
-                                                                                // declared here for optimization reasons
-    private void OnEnable()
+    void OnEnable()
     {
         editorTargetInstance = (target as SpawnDatabase);
         spawnPositions = serializedObject.FindProperty("spawnPositions");
 
-        SceneView.duringSceneGui += OnSceneGUI;                                 // weirdly OnSceneGUI did not work 
+        SceneView.duringSceneGui += OnSceneGUI;                                 // weirdly OnSceneGUI did not work
     }
 
-    private void OnDisable()
+    void OnDisable()
     {
         SceneView.duringSceneGui -= OnSceneGUI;
     }
@@ -27,32 +29,36 @@ public class SpawnCustomInspector : Editor
         serializedObject.Update();                                              // fetch target's properties from memory
                                                                                 // target's properties could've been modified elsewhere without using this instance of SerializedObject
 
-        EditorGUILayout.PropertyField(spawnPositions, true);
+        EditorGUILayout.PropertyField(spawnPositions, false);
+        for (int i = 0; i < spawnPositions.arraySize; i++)
+        {
+            EditorGUILayout.PropertyField(spawnPositions.GetArrayElementAtIndex(i));
+        }
 
         serializedObject.ApplyModifiedProperties();                             // not calling this will NOT update the actual value of target's properties
     }
 
-    private void OnSceneGUI(SceneView sceneView)
+    void OnSceneGUI(SceneView sceneView)
     {
         EditorGUI.BeginChangeCheck();
 
-        serializedObject.Update();
+        Handles.color = Color.green;
 
         List<Vector3> sceneSpawnPositions = new List<Vector3>();
-        for (int i = 0; i < spawnPositions.arraySize; i++)
+        for (int i = 0; i < editorTargetInstance.spawnPositions.Count; i++)
         {
-            sceneSpawnPositions.Add(Handles.PositionHandle(spawnPositions.GetArrayElementAtIndex(i).vector3Value, Quaternion.identity));
+            sceneSpawnPositions.Add(Handles.PositionHandle(editorTargetInstance.spawnPositions[i], Quaternion.identity));
+            Handles.DrawWireCube(editorTargetInstance.spawnPositions[i], Vector3.one);
         }
         
         if (EditorGUI.EndChangeCheck())
         {
-            for (int i = 0; i < spawnPositions.arraySize; i++)
+            serializedObject.Update();
+            for (int i = 0; i < editorTargetInstance.spawnPositions.Count; i++)
             {
-                spawnPositions.DeleteArrayElementAtIndex(i);
-                spawnPositions.InsertArrayElementAtIndex(i);
-                spawnPositions.GetArrayElementAtIndex(i).vector3Value = sceneSpawnPositions[i];
+                if (spawnPositions.GetArrayElementAtIndex(i).vector3Value != sceneSpawnPositions[i]) 
+                    spawnPositions.GetArrayElementAtIndex(i).vector3Value = sceneSpawnPositions[i];
             }
-
             serializedObject.ApplyModifiedProperties();
         }
     }

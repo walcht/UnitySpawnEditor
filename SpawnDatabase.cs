@@ -1,8 +1,10 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEditor;
 
+/// <summary>
+///     Scriptable Object that holds spawn\waypoint positions as a list.
+///     Positions can be easily modified using
+/// </summary>
 [CreateAssetMenu(fileName = "Spawn Database", menuName = "SO/Spawn Database")]
 public class SpawnDatabase : ScriptableObject
 {
