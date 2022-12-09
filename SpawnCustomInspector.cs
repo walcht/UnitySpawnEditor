@@ -29,12 +29,8 @@ public class SpawnCustomInspector : Editor
         serializedObject.Update();                                              // fetch target's properties from memory
                                                                                 // target's properties could've been modified elsewhere without using this instance of SerializedObject
 
-        EditorGUILayout.PropertyField(spawnPositions, false);
-        for (int i = 0; i < spawnPositions.arraySize; i++)
-        {
-            EditorGUILayout.PropertyField(spawnPositions.GetArrayElementAtIndex(i));
-        }
-
+        EditorGUILayout.PropertyField(spawnPositions, true);
+         
         serializedObject.ApplyModifiedProperties();                             // not calling this will NOT update the actual value of target's properties
     }
 
