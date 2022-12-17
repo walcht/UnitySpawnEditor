@@ -24,7 +24,8 @@ public class SpawnCustomInspector : Editor
     const string _select_all_button         = "select-all-button";
     const string _clear_selection_button    = "clear-selecton-button";
 
-    bool test = false;
+    readonly Vector3 _wire_cube_size = new Vector3(0.80f, 2.00f, 0.80f);
+    readonly Vector3 _wire_cube_pos_offset = new Vector3(0, 1, 0);
 
     private void OnEnable()
     {
@@ -41,13 +42,12 @@ public class SpawnCustomInspector : Editor
     {
         EditorGUI.BeginChangeCheck();
 
-        Handles.color = Color.green;
-
         List<(int index, Vector3 position)> sceneSpawnPositions = new List<(int, Vector3)>();
         foreach (int index in listView.selectedIndices)
         {
             sceneSpawnPositions.Add((index, Handles.PositionHandle(targetSpawnDatabase.spawnPositions[index], Quaternion.identity)));
-            Handles.DrawWireCube(targetSpawnDatabase.spawnPositions[index], Vector3.one);
+            Handles.color = Color.green;
+            Handles.DrawWireCube(targetSpawnDatabase.spawnPositions[index] + _wire_cube_pos_offset, _wire_cube_size);
         }
 
         //for (int i = 0; i < targetSpawnDatabase.spawnPositions.Count; ++i)
