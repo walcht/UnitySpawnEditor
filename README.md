@@ -1,9 +1,10 @@
 ## About
 A simple custom editor inspector script for editing spawn\waypoint positions.
-Spawn positions are stored in a C#```List<Vector3>``` container in an instance of a ScriptableObject called ```SpawnDatabase```.
+Spawn positions are stored in a ```csharp List<Vector3>``` container in an instance of a ScriptableObject called ```SpawnDatabase```.
+
 ![custom editor inspector image][editor-image]
-When an instance of the ScriptableObject ```SpawnDatabase``` is selected in the Project window, __selected__ spawns from the list in the custom inspector are shown in the scene view.
-For istance spawns 1, 4, 6 and 9 are selected and they are shown in the scene view:
+________________________________________________________
+When an instance of the ScriptableObject ```SpawnDatabase``` is selected in the Project window, __selected__ spawns from the list in the custom inspector are shown in the scene view. For instance spawns 1, 4, 6 and 9 are selected and they are shown in the scene view.
 ![scene view image][scene-view-image]
 
 ## Installation
