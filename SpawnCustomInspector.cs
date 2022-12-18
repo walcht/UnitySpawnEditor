@@ -4,7 +4,6 @@ using UnityEngine.UIElements;
 using UnityEditor.UIElements;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System;
 
 [CustomEditor(typeof(SpawnDatabase))]
@@ -18,11 +17,10 @@ public class SpawnCustomInspector : Editor
 
     const string _spawn_positions_size      = "spawn-positions-size";
     const string _list_view                 = "spawn-positions";
-    const string _add_offset                = "add-offset";
     const string _add_button                = "add-button";
     const string _delete_button             = "delete-button";
     const string _select_all_button         = "select-all-button";
-    const string _clear_selection_button    = "clear-selecton-button";
+    const string _clear_selection_button    = "clear-selection-button";
 
     readonly Vector3 _wire_cube_size = new Vector3(0.80f, 2.00f, 0.80f);
     readonly Vector3 _wire_cube_pos_offset = new Vector3(0, 1, 0);
@@ -49,12 +47,6 @@ public class SpawnCustomInspector : Editor
             Handles.color = Color.green;
             Handles.DrawWireCube(targetSpawnDatabase.spawnPositions[index] + _wire_cube_pos_offset, _wire_cube_size);
         }
-
-        //for (int i = 0; i < targetSpawnDatabase.spawnPositions.Count; ++i)
-        //{
-        //    sceneSpawnPositions.Add(Handles.PositionHandle(targetSpawnDatabase.spawnPositions[i], Quaternion.identity));
-        //    Handles.DrawWireCube(targetSpawnDatabase.spawnPositions[i], Vector3.one);
-        //}
 
         if (EditorGUI.EndChangeCheck())
         {
@@ -107,8 +99,8 @@ public class SpawnCustomInspector : Editor
                 SceneView.lastActiveSceneView.Repaint();
             };
 
-            SceneView.duringSceneGui += OnSceneGUI;                                 // OnSceneGUI did not work so I had to manually subscribe
-                                                                                    // to the appropriate event
+            SceneView.duringSceneGui += OnSceneGUI;                                 // only execute OnSceneGUI when it is assured that
+                                                                                    // the spawn positions ListView is well initialized
         }
         catch (NullReferenceException)
         {
@@ -123,8 +115,12 @@ public class SpawnCustomInspector : Editor
 
             addButton.RegisterCallback<ClickEvent>((ClickEvent evt) => {
                 targetSpawnDatabase.spawnPositions.Add(Vector3.zero);
+                serializedObject.Update();                                          // it is extremely important to Update the serializedObject
+                                                                                    // so that spawnPositions property can reference the newly
+                                                                                    // added element(s)
+                listView.RefreshItems();
+
                 evt.StopPropagation();
-                listView.Rebuild();
             });
         }
         catch (NullReferenceException) { Debug.LogWarning(string.Format("{0} string isn't set correctly.", nameof(_add_button))); }
@@ -156,14 +152,23 @@ public class SpawnCustomInspector : Editor
         try
         {
             Button clearSelectionButton = root.Q<Button>(name = _clear_selection_button);
-            clearSelectionButton.RegisterCallback<ClickEvent>((ClickEvent evt) => {
+
+            clearSelectionButton.RegisterCallback<ClickEvent>((ClickEvent evt) =>
+            {
                 listView.ClearSelection();
             });
+
         }
         catch (NullReferenceException) { Debug.LogWarning(string.Format("{0} string isn't set correctly.", nameof(_clear_selection_button))); }
 
-        IntegerField spawnPositionsSizeField = root.Q<IntegerField>(name = _spawn_positions_size);
-        // spawnPositionsSizeField.BindProperty();      Still don't know how to bind this to the array's size
+        try
+        {
+            IntegerField spawnPositionsSizeField = root.Q<IntegerField>(name = _spawn_positions_size);
+
+            spawnPositionsSizeField.BindProperty(spawnPositions.FindPropertyRelative("Array.size"));
+
+        }
+        catch (NullReferenceException) { Debug.LogWarning(string.Format("{0} string isn't set correctly.", nameof(_spawn_positions_size))); }
 
         return root;
     }
