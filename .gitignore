@@ -1,5 +1,2 @@
-*
-!*.cs
-!*.uxml
-!.gitignore
-!README
+*.asset
+*.meta
