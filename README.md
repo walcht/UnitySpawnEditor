@@ -1,15 +1,18 @@
 ## About
 A simple custom editor inspector script for editing spawn\waypoint positions.
-Spawn positions are stored in a ```csharp List<Vector3>``` container in an instance of a ScriptableObject called ```SpawnDatabase```.
+
+Spawn positions are stored in a ```List<Vector3>```container in an instance of a ScriptableObject called ```SpawnDatabase```.
 
 ![custom editor inspector image][editor-image]
 ________________________________________________________
 When an instance of the ScriptableObject ```SpawnDatabase``` is selected in the Project window, __selected__ spawns from the list in the custom inspector are shown in the scene view. For instance spawns 1, 4, 6 and 9 are selected and they are shown in the scene view.
+
 ![scene view image][scene-view-image]
 
 ## Installation
 To keep things simple, all you need to do is: 
-1. copy ```SpawnDatabase.cs``` and ```SpawnCustomInspector.cs``` into your ```Scripts``` folder.
+1. Make sure that you use ___Unity 2021.3__ or __newer version__
+1. copy ```SpawnDatabase.cs``` and ```SpawnCustomInspector.cs``` into your ```Scripts``` folder
 
 ## Usage
 1. Create a ```SpawnDatabase``` instance throught the assets menu ```Create/SO/Spawn Database```
@@ -23,5 +26,5 @@ To keep things simple, all you need to do is:
 MIT License.
 
 
-[editor-image]: /images/scene-view.PNG
-[scene-view-image]: /images/custom-editor.PNG
+[editor-image]: /images/custom-editor.PNG
+[scene-view-image]: /images/scene-view.PNG
