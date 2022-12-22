@@ -1,6 +1,8 @@
 ## About
 A simple custom editor inspector script for editing spawn\waypoint positions.
+
 This custom inspector is built using the new, powerful Unity UIToolkit. Thus this serves as an educational example on how to use this new UI package.
+
 Spawn positions are stored in a ```List<Vector3>```container in an instance of a ScriptableObject called ```SpawnDatabase```.
 
 ![custom editor inspector image][editor-image]
