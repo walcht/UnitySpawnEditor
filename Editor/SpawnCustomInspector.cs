@@ -1,3 +1,5 @@
+//#define WARNING_WHEN_UI_ELEMENTS_NOT_PROVIDED                                   // uncomment\comment this to enable\disable console warnings when one or more
+                                                                                // non-crucial UI elements are not provided
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -21,6 +23,7 @@ public class SpawnCustomInspector : Editor
     const string _delete_button             = "delete-button";
     const string _select_all_button         = "select-all-button";
     const string _clear_selection_button    = "clear-selection-button";
+    const string _copy_to_clipboard_button  = "copy-to-clipboard-button";
 
     readonly Vector3 _wire_cube_size = new Vector3(0.80f, 2.00f, 0.80f);
     readonly Vector3 _wire_cube_pos_offset = new Vector3(0, 1, 0);
@@ -108,67 +111,71 @@ public class SpawnCustomInspector : Editor
             return new VisualElement();                                             // return empty inspector
         }
 
-        // It is not necessary to provide other UI elements such as: ClearSelection Button
-        try
+        // all of these UI elements aren't crucial for this custom editor
+        // no error will occur if they're not provided in the UXML file
+        Button addButton = root.Q<Button>(name = _add_button);
+        Button deleteButton = root.Q<Button>(name = _delete_button);
+        Button selectAllButton = root.Q<Button>(name = _select_all_button);
+        Button clearSelectionButton = root.Q<Button>(name = _clear_selection_button);
+
+        IntegerField spawnPositionsSizeField = root.Q<IntegerField>(name = _spawn_positions_size);
+
+        Button copyToClipboardButton = root.Q<Button>(name = _copy_to_clipboard_button);
+
+#if WARNING_WHEN_UI_ELEMENTS_NOT_PROVIDED
+        if (addButton == null) 
+            Debug.LogWarning(string.Format("{0} UI name is wrongly set. Make sure the name you set matches this string", nameof(_add_button)));
+
+        if (deleteButton == null) 
+            Debug.LogWarning(string.Format("{0} UI name is wrongly set. Make sure the name you set matches this string", nameof(_delete_button)));
+
+        if (selectAllButton == null) 
+            Debug.LogWarning(string.Format("{0} UI name is wrongly set. Make sure the name you set matches this string", nameof(_select_all_button)));
+
+        if (clearSelectionButton == null) 
+            Debug.LogWarning(string.Format("{0} UI name is wrongly set. Make sure the name you set matches this string", nameof(_clear_selection_button)));
+        
+        if (spawnPositionsSizeField == null) 
+            Debug.LogWarning(string.Format("{0} UI name is wrongly set. Make sure the name you set matches this string", nameof(_spawn_positions_size)));
+        
+        if (copyToClipboardButton == null) 
+            Debug.LogWarning(string.Format("{0} UI name is wrongly set. Make sure the name you set matches this string", nameof(_copy_to_clipboard_button)));
+#endif
+
+        addButton?.RegisterCallback<ClickEvent>((ClickEvent evt) => {
+            targetSpawnDatabase.spawnPositions.Add(Vector3.zero);
+            serializedObject.Update();                                          // it is extremely important to Update the serializedObject
+                                                                                // so that spawnPositions property can reference the newly
+                                                                                // added element(s)
+            listView.RefreshItems();
+
+            evt.StopPropagation();
+        });
+
+        deleteButton?.RegisterCallback<ClickEvent>((ClickEvent evt) => {
+            foreach (int index in listView.selectedIndices)
+                targetSpawnDatabase.spawnPositions.RemoveAt(index);
+            listView.RefreshItems();
+            evt.StopPropagation();
+        });
+
+        selectAllButton?.RegisterCallback<ClickEvent>((ClickEvent evt) => {
+            listView.SetSelection(Enumerable.Range(0, listView.itemsSource.Count));
+            evt.StopPropagation();
+        });
+
+        clearSelectionButton?.RegisterCallback<ClickEvent>((ClickEvent evt) =>
         {
-            Button addButton = root.Q<Button>(name = _add_button);
+            listView.ClearSelection();
+        });
 
-            addButton.RegisterCallback<ClickEvent>((ClickEvent evt) => {
-                targetSpawnDatabase.spawnPositions.Add(Vector3.zero);
-                serializedObject.Update();                                          // it is extremely important to Update the serializedObject
-                                                                                    // so that spawnPositions property can reference the newly
-                                                                                    // added element(s)
-                listView.RefreshItems();
+        spawnPositionsSizeField?.BindProperty(spawnPositions.FindPropertyRelative("Array.size"));
 
-                evt.StopPropagation();
-            });
-        }
-        catch (NullReferenceException) { Debug.LogWarning(string.Format("{0} string isn't set correctly.", nameof(_add_button))); }
-
-        try
+        copyToClipboardButton?.RegisterCallback<ClickEvent>((ClickEvent evt) =>
         {
-            Button deleteButton = root.Q<Button>(name = _delete_button);
-
-            deleteButton.RegisterCallback<ClickEvent>((ClickEvent evt) => {
-                foreach (int index in listView.selectedIndices)
-                    targetSpawnDatabase.spawnPositions.RemoveAt(index);
-                listView.RefreshItems();
-                evt.StopPropagation();
-            });
-        }
-        catch (NullReferenceException) { Debug.LogWarning(string.Format("{0} string isn't set correctly.", nameof(_delete_button))); }
-
-        try
-        {
-            Button selectAllButton = root.Q<Button>(name = _select_all_button);
-
-            selectAllButton.RegisterCallback<ClickEvent>((ClickEvent evt) => {
-                listView.SetSelection(Enumerable.Range(0, listView.itemsSource.Count));
-                evt.StopPropagation();
-            });
-        }
-        catch (NullReferenceException) { Debug.LogWarning(string.Format("{0} string isn't set correctly.", nameof(_select_all_button))); }
-
-        try
-        {
-            Button clearSelectionButton = root.Q<Button>(name = _clear_selection_button);
-
-            clearSelectionButton.RegisterCallback<ClickEvent>((ClickEvent evt) =>
-            {
-                listView.ClearSelection();
-            });
-
-        }
-        catch (NullReferenceException) { Debug.LogWarning(string.Format("{0} string isn't set correctly.", nameof(_clear_selection_button))); }
-
-        try
-        {
-            IntegerField spawnPositionsSizeField = root.Q<IntegerField>(name = _spawn_positions_size);
-
-            spawnPositionsSizeField.BindProperty(spawnPositions.FindPropertyRelative("Array.size"));
-
-        }
-        catch (NullReferenceException) { Debug.LogWarning(string.Format("{0} string isn't set correctly.", nameof(_spawn_positions_size))); }
+            // the list needs to be serialized and copied to the system's clipboard
+            EditorGUIUtility.systemCopyBuffer = JsonUtility.ToJson(targetSpawnDatabase.spawnPositions);
+        });
 
         return root;
     }
