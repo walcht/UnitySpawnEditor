@@ -31,5 +31,5 @@ To keep things simple, all you need to do is:
 MIT License.
 
 
-[editor-image]: /images/custom-editor.PNG
-[scene-view-image]: /images/scene-view.PNG
+[editor-image]: /.images/custom-editor.PNG
+[scene-view-image]: /.images/scene-view.PNG
