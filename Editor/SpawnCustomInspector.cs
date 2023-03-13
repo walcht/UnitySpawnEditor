@@ -1,5 +1,7 @@
-//#define WARNING_WHEN_UI_ELEMENTS_NOT_PROVIDED                                   // uncomment\comment this to enable\disable console warnings when one or more
-                                                                                // non-crucial UI elements are not provided
+// uncomment\comment this to enable\disable console warnings when one or more
+// non-crucial UI elements are not provided
+#define WARNING_WHEN_UI_ELEMENTS_NOT_PROVIDED
+
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -15,8 +17,8 @@ public class SpawnCustomInspector : Editor
     SpawnDatabase targetSpawnDatabase;
     SerializedProperty spawnPositions;
 
-    ListView listView;                                                          // to keep global reference for the ListView
-
+    // keep global reference for the ListView
+    ListView listView;                      
     const string _spawn_positions_size      = "spawn-positions-size";
     const string _list_view                 = "spawn-positions";
     const string _add_button                = "add-button";
@@ -31,7 +33,9 @@ public class SpawnCustomInspector : Editor
     private void OnEnable()
     {
         targetSpawnDatabase = (SpawnDatabase)target;
-        spawnPositions = serializedObject.FindProperty("spawnPositions");       // add exception hanbling here
+
+        // add exception handling here!
+        spawnPositions = serializedObject.FindProperty("spawnPositions");
     }
 
     private void OnDisable()
@@ -43,41 +47,52 @@ public class SpawnCustomInspector : Editor
     {
         EditorGUI.BeginChangeCheck();
 
-        List<(int index, Vector3 position)> sceneSpawnPositions = new List<(int, Vector3)>();
+        List<(int index, Vector3 position)> sceneSpawnPositions =
+            new List<(int, Vector3)>();
+
         foreach (int index in listView.selectedIndices)
         {
-            sceneSpawnPositions.Add((index, Handles.PositionHandle(targetSpawnDatabase.spawnPositions[index], Quaternion.identity)));
+            sceneSpawnPositions.Add((index, Handles.PositionHandle(
+                            targetSpawnDatabase.spawnPositions[index],
+                            Quaternion.identity)
+                        ));
             Handles.color = Color.green;
-            Handles.DrawWireCube(targetSpawnDatabase.spawnPositions[index] + _wire_cube_pos_offset, _wire_cube_size);
+            Handles.DrawWireCube(
+                    targetSpawnDatabase.spawnPositions[index] + _wire_cube_pos_offset,
+                    _wire_cube_size
+                    );
         }
 
         if (EditorGUI.EndChangeCheck())
         {
-            serializedObject.Update();                                          // make sure serializedObject is synchronized with
-                                                                                // the spawn position database
-
+            // make sure serializedObject is synchronized with the spawn position database
+            serializedObject.Update();
             foreach (var item in sceneSpawnPositions)
             {
-                if (spawnPositions.GetArrayElementAtIndex(item.index).vector3Value != item.position)
-                    spawnPositions.GetArrayElementAtIndex(item.index).vector3Value = item.position;
+                if (spawnPositions.GetArrayElementAtIndex(item.index)
+                        .vector3Value != item.position)
+                    spawnPositions.GetArrayElementAtIndex(item.index)
+                        .vector3Value = item.position;
             }
-
-            serializedObject.ApplyModifiedProperties();                         // make sure to apply modified properties,
-                                                                                // otherwise the spawn positions database won't 
-                                                                                // get updated!
+            
+            // make sure to apply modified properties otherwise the spawn positions
+            // database won't get updated!
+            serializedObject.ApplyModifiedProperties(); 
         }
     }
 
     public override VisualElement CreateInspectorGUI()
     {
-        // Each editor window contains a root VisualElement object called rootVisualElement
-        // you can specify the layout using C# scripting, but it's much more convenient to just use C# scripting for 
+        // Each editor window contains a root VisualElement object called 
+        // rootVisualElement you can specify the layout using C# scripting, 
+        // but it's much more convenient to just use C# scripting for 
         // importing UXML and binding
 
         // Import UXML, and create a tree of VisualElements from it
         VisualElement root = uxml_document.Instantiate();
 
-        // Exception handling for the list view. The list view name SHOULD be correctly provided
+        // Exception handling for the list view. The list view name SHOULD 
+        // be correctly provided
         try
         {
             listView = root.Q<ListView>(name = _list_view);
@@ -95,20 +110,26 @@ public class SpawnCustomInspector : Editor
             listView.makeItem = _makeItem;
             listView.bindItem = _bindItem;
 
-            // the scene view has to be repainted each time a selection change happens in the ListView
-            // not doing this will result in lags (since the scene doesn't have to be updated because of an inspector event)
-            listView.selectionChanged += (objects) =>
+            // the scene view has to be repainted each time a selection change 
+            // happens in the ListView not doing this will result in lags 
+            // (since the scene doesn't have to be updated because of an inspector event)
+            listView.onSelectionChange += (objects) =>
             {
                 SceneView.lastActiveSceneView.Repaint();
             };
 
-            SceneView.duringSceneGui += OnSceneGUI;                                 // only execute OnSceneGUI when it is assured that
-                                                                                    // the spawn positions ListView is well initialized
+
+            // only execute OnSceneGUI when it is assured that
+            // the spawn positions ListView is well initialized
+            SceneView.duringSceneGui += OnSceneGUI; 
         }
         catch (NullReferenceException)
         {
-            Debug.LogError(string.Format("{0} string isn't set correctly.", nameof(_list_view)));
-            return new VisualElement();                                             // return empty inspector
+            Debug.LogError(string.Format(
+                        "{0} string isn't set correctly.",
+                        nameof(_list_view))
+                    );
+            return new VisualElement();     // return empty inspector
         }
 
         // all of these UI elements aren't crucial for this custom editor
@@ -118,43 +139,70 @@ public class SpawnCustomInspector : Editor
         Button selectAllButton = root.Q<Button>(name = _select_all_button);
         Button clearSelectionButton = root.Q<Button>(name = _clear_selection_button);
 
-        IntegerField spawnPositionsSizeField = root.Q<IntegerField>(name = _spawn_positions_size);
+        IntegerField spawnPositionsSizeField = 
+            root.Q<IntegerField>(name = _spawn_positions_size);
 
-        Button copyToClipboardButton = root.Q<Button>(name = _copy_to_clipboard_button);
+        Button copyToClipboardButton = 
+            root.Q<Button>(name = _copy_to_clipboard_button);
 
 #if WARNING_WHEN_UI_ELEMENTS_NOT_PROVIDED
         if (addButton == null) 
-            Debug.LogWarning(string.Format("{0} UI name is wrongly set. Make sure the name you set matches this string", nameof(_add_button)));
+            Debug.LogWarning(string.Format(
+                        "{0} UI name is wrongly set. Make sure the name you set matches this string",
+                        nameof(_add_button))
+                    );
 
         if (deleteButton == null) 
-            Debug.LogWarning(string.Format("{0} UI name is wrongly set. Make sure the name you set matches this string", nameof(_delete_button)));
+            Debug.LogWarning(string.Format(
+                        "{0} UI name is wrongly set. Make sure the name you set matches this string",
+                        nameof(_delete_button))
+                    );
 
         if (selectAllButton == null) 
-            Debug.LogWarning(string.Format("{0} UI name is wrongly set. Make sure the name you set matches this string", nameof(_select_all_button)));
+            Debug.LogWarning(string.Format(
+                        "{0} UI name is wrongly set. Make sure the name you set matches this string",
+                        nameof(_select_all_button))
+                    );
 
         if (clearSelectionButton == null) 
-            Debug.LogWarning(string.Format("{0} UI name is wrongly set. Make sure the name you set matches this string", nameof(_clear_selection_button)));
+            Debug.LogWarning(string.Format(
+                        "{0} UI name is wrongly set. Make sure the name you set matches this string",
+                        nameof(_clear_selection_button))
+                    );
         
         if (spawnPositionsSizeField == null) 
-            Debug.LogWarning(string.Format("{0} UI name is wrongly set. Make sure the name you set matches this string", nameof(_spawn_positions_size)));
+            Debug.LogWarning(string.Format(
+                        "{0} UI name is wrongly set. Make sure the name you set matches this string",
+                        nameof(_spawn_positions_size))
+                    );
         
         if (copyToClipboardButton == null) 
-            Debug.LogWarning(string.Format("{0} UI name is wrongly set. Make sure the name you set matches this string", nameof(_copy_to_clipboard_button)));
+            Debug.LogWarning(string.Format(
+                        "{0} UI name is wrongly set. Make sure the name you set matches this string",
+                        nameof(_copy_to_clipboard_button))
+                    );
 #endif
 
         addButton?.RegisterCallback<ClickEvent>((ClickEvent evt) => {
             targetSpawnDatabase.spawnPositions.Add(Vector3.zero);
-            serializedObject.Update();                                          // it is extremely important to Update the serializedObject
-                                                                                // so that spawnPositions property can reference the newly
-                                                                                // added element(s)
+
+
+            // it is extremely important to Update the serializedObject
+            // so that spawnPositions property can reference the newly
+            // added element(s)
+            serializedObject.Update();
             listView.RefreshItems();
 
             evt.StopPropagation();
         });
 
         deleteButton?.RegisterCallback<ClickEvent>((ClickEvent evt) => {
-            foreach (int index in listView.selectedIndices)
-                targetSpawnDatabase.spawnPositions.RemoveAt(index);
+            int indices_removed = 0;
+            foreach (int index in listView.selectedIndices.OrderBy(i => i))
+            {
+                targetSpawnDatabase.spawnPositions.RemoveAt(index - indices_removed);
+                indices_removed++;
+            }
             listView.RefreshItems();
             evt.StopPropagation();
         });
@@ -167,14 +215,19 @@ public class SpawnCustomInspector : Editor
         clearSelectionButton?.RegisterCallback<ClickEvent>((ClickEvent evt) =>
         {
             listView.ClearSelection();
+            evt.StopPropagation();
         });
 
-        spawnPositionsSizeField?.BindProperty(spawnPositions.FindPropertyRelative("Array.size"));
+        spawnPositionsSizeField?.BindProperty(
+                spawnPositions.FindPropertyRelative("Array.size")
+                );
 
         copyToClipboardButton?.RegisterCallback<ClickEvent>((ClickEvent evt) =>
         {
             // the list needs to be serialized and copied to the system's clipboard
-            EditorGUIUtility.systemCopyBuffer = JsonUtility.ToJson(targetSpawnDatabase.spawnPositions);
+            EditorGUIUtility.systemCopyBuffer = JsonUtility.ToJson(
+                    targetSpawnDatabase.spawnPositions);
+            evt.StopPropagation();
         });
 
         return root;

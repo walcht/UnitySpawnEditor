@@ -10,3 +10,4 @@ public class SpawnDatabase : ScriptableObject
 {
     public List<Vector3> spawnPositions = new List<Vector3>();
 }
+
